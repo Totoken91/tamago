@@ -4,7 +4,10 @@
 //  squash & stretch élastique, tremblement, et mode « jeu » (suit le curseur).
 // ============================================================================
 import * as THREE from 'three';
-import { MOOD_STYLE } from './config.js';
+import { MOOD_STYLE, LIVING } from './config.js';
+
+// teinte « nuit » appliquée quand la créature dort
+const SLEEP_TINT = new THREE.Vector3(0.62, 0.7, 0.92);
 
 // Shader minimal : échantillonne la texture puis applique teinte, saturation
 // et luminosité. Permet des couleurs vraiment « ternes » sur les états tristes.
@@ -172,6 +175,12 @@ export class Creature {
     this._tint = new THREE.Vector3(1, 1, 1);
     this._sat = 1;
     this._bri = 1;
+
+    // vie : regard vers le curseur, sommeil, évolution
+    this.lookX = 0; this.lookY = 0;   // curseur normalisé -1..1
+    this.asleep = false;
+    this.evoScale = 1;                 // multiplicateur d'évolution
+    this._glowBonus = 0;              // halo permanent lié à l'évolution
   }
 
   /** Impulsion de squash (rebond jelly) + secousse de l'antenne. amount>0. */
@@ -206,8 +215,17 @@ export class Creature {
     this._worldWidth = worldHeight / (this.baseAspect * this.content.h);
   }
 
+  /** Regard : curseur normalisé (-1..1). */
+  setLook(nx, ny) { this.lookX = nx; this.lookY = ny; }
+
+  /** Sommeil (cycle jour/nuit). */
+  setSleep(v) { this.asleep = v; }
+
+  /** Applique un stade d'évolution (taille + halo permanent). */
+  setEvolution(scale, glowBonus) { this.evoScale = scale; this._glowBonus = glowBonus; }
+
   // --- ancrages (monde) dérivés de la boîte du contenu ----------------------
-  get _ww() { return this._worldWidth || 1; }
+  get _ww() { return (this._worldWidth || 1) * (this.evoScale || 1); }
   /** décalage vertical centre-pivot → bas visible du corps (négatif = dessous). */
   get contentBottomOffset() { return this.baseAspect * (0.5 - this.content.B) * this._ww; }
   /** décalage vertical centre-pivot → centre visible du corps. */
@@ -260,14 +278,17 @@ export class Creature {
       ty = (Math.random() - 0.5) * 0.02 * this.tremble;
     }
 
-    const ww = this._worldWidth || 1;
+    const ww = this._ww;
+    // regard : léger penché du corps vers le curseur (endormie → ne suit pas)
+    const look = this.asleep ? 0 : LIVING.LOOK_STRENGTH;
+    const leanX = this.lookX * 0.05 * ww * look;
     this.pivot.position.set(
-      (this.target.x + sway + tx) ,
+      (this.target.x + sway + tx + leanX),
       (this.target.y + bob + ty),
       this.target.z
     );
     this.pivot.scale.set(ww * sx, ww * sy, 1);
-    this.mesh.rotation.z = Math.sin(this.time * 0.8) * 0.02;
+    this.mesh.rotation.z = Math.sin(this.time * 0.8) * 0.02 - this.lookX * 0.11 * look;
 
     // ombre au sol : sous les « pieds » visibles du corps, s'élargit au squash
     const footY = this.home.y + this.baseAspect * (0.5 - this.content.B) * ww + ww * 0.02;
@@ -275,8 +296,9 @@ export class Creature {
     this.shadow.scale.set(ww * this.content.w * 1.2 * (1 + sq * 0.5), ww * this.content.w * 0.34, 1);
     this.shadow.material.opacity = 0.22 * (1 - Math.min(0.6, this.playT > 0 ? 0.3 : 0));
 
-    // --- halo (glow) : intensité lissée + douce pulsation, centré sur le corps
-    this.glow += (this._glowTarget - this.glow) * Math.min(1, dt * 2.5);
+    // --- halo (glow) : humeur + bonus d'évolution, éteint pendant le sommeil
+    const glowTarget = this.asleep ? 0 : this._glowTarget + this._glowBonus;
+    this.glow += (glowTarget - this.glow) * Math.min(1, dt * 2.5);
     const pulse = 1 + Math.sin(this.time * 1.8) * 0.06;
     const gs = ww * this.content.w * 2.5 * pulse;
     this.glowSprite.scale.set(gs, gs, 1);
@@ -289,15 +311,18 @@ export class Creature {
 
     // --- antenne « jelly » : ballant permanent + secousses d'interaction -----
     this.wobbleEnergy *= Math.max(0, 1 - dt * 3.5);      // décroissance douce
-    const idleWobble = 0.03 * this.idleSpeed;            // gigote moins si triste
+    const idleWobble = (this.asleep ? 0.012 : 0.03) * this.idleSpeed; // repos plus calme
     const u = this.mat.uniforms;
     u.uTime.value = this.time;
     u.uWobble.value = idleWobble + this.wobbleEnergy;
 
-    // --- lissage des uniforms du shader (transitions de palier fluides) ------
-    u.uTint.value.lerp(this._tint, Math.min(1, dt * 3));
-    u.uSaturation.value += (this._sat - u.uSaturation.value) * Math.min(1, dt * 3);
-    u.uBrightness.value += (this._bri - u.uBrightness.value) * Math.min(1, dt * 3);
+    // --- lissage des uniforms : humeur, teintée « nuit » pendant le sommeil ---
+    const tint = this.asleep ? SLEEP_TINT : this._tint;
+    const sat = this.asleep ? 0.7 : this._sat;
+    const bri = this.asleep ? 0.72 : this._bri;
+    u.uTint.value.lerp(tint, Math.min(1, dt * 2));
+    u.uSaturation.value += (sat - u.uSaturation.value) * Math.min(1, dt * 2);
+    u.uBrightness.value += (bri - u.uBrightness.value) * Math.min(1, dt * 2);
   }
 
   /** Position monde du « cœur » du corps visible (pour émettre les particules). */

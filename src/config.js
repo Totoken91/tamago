@@ -71,4 +71,69 @@ export const MOOD_TEXTS = {
   needy:       ['a vraiment besoin de toi 💔', 'se sent oublié…', 'tremblote un peu…', 'attend ton amour'],
 };
 
+// ============================================================================
+//  Lien (bond) permanent + évolution
+// ============================================================================
+export const BOND = {
+  // XP de lien gagné par action (ne descend jamais).
+  XP: { caress: 1, hug: 6, compliment: 4, play: 5, ask: 10, golden: 8, minigame: 12 },
+  XP_PER_MIN_PRESENT: 2,          // petit gain passif tant qu'on est là
+  // Paliers de niveau : XP cumulé requis pour atteindre le niveau (index+1).
+  LEVELS: [0, 40, 110, 220, 380, 600, 900, 1300, 1800, 2500],
+};
+
+// Stades d'évolution selon le niveau de lien. scale = taille relative,
+// glowBonus = halo permanent ajouté, label affiché à l'évolution.
+export const EVOLUTION = [
+  { minLevel: 1, scale: 0.86, glowBonus: 0.0,  label: 'Bébé 🌱' },
+  { minLevel: 3, scale: 1.0,  glowBonus: 0.04, label: 'Jeune ✨' },
+  { minLevel: 6, scale: 1.12, glowBonus: 0.12, label: 'Épanoui 🌟' },
+];
+
+// ============================================================================
+//  Créature vivante : demandes, regard, sommeil
+// ============================================================================
+export const LIVING = {
+  ASK_MIN: 35, ASK_MAX: 70,       // intervalle (s) entre deux demandes de câlin
+  ASK_WINDOW: 9,                  // temps (s) pour répondre
+  ASK_BONUS_LOVE: 10,             // bonus si on répond à temps
+  LOOK_STRENGTH: 0.5,             // intensité du suivi du regard/corps vers le curseur
+};
+
+// Cycle jour/nuit basé sur l'heure locale réelle.
+export const DAYNIGHT = {
+  SLEEP_START: 22,                // heure de coucher
+  SLEEP_END: 7,                   // heure de réveil
+};
+
+// ============================================================================
+//  Mini-jeu « attrape-cœurs » + cœurs dorés
+// ============================================================================
+export const MINIGAME = {
+  DURATION: 18,                   // durée d'une partie (s)
+  SPAWN_EVERY: 0.62,              // intervalle d'apparition d'un cœur (s)
+  LOVE_PER_CATCH: 1.2,            // amour par cœur attrapé
+  cd: 8,                          // cooldown après la partie
+};
+export const GOLDEN = {
+  EVERY_MIN: 55, EVERY_MAX: 120,  // intervalle d'apparition d'un cœur doré (s)
+  LIFETIME: 7,                    // temps visible avant de disparaître (s)
+  BONUS_LOVE: 12,
+};
+
+// ============================================================================
+//  Petits succès
+// ============================================================================
+export const ACHIEVEMENTS = [
+  { id: 'first_hug',    label: 'Premier câlin 🤗',        test: (s) => s.hugs >= 1 },
+  { id: 'sweet_talker', label: 'Beau parleur 💬',          test: (s) => s.compliments >= 10 },
+  { id: 'max_love',     label: 'Amour au maximum 💖',      test: (s) => s.love >= 99.5 },
+  { id: 'bond_3',       label: 'Complices — niveau 3 🔗',  test: (s) => s.bondLevel >= 3 },
+  { id: 'bond_6',       label: 'Âmes sœurs — niveau 6 🌟', test: (s) => s.bondLevel >= 6 },
+  { id: 'week',         label: '7 jours ensemble 📅',      test: (s) => s.daysTogether >= 7 },
+  { id: 'streak_3',     label: 'Fidèle — série de 3 🔥',   test: (s) => s.streak >= 3 },
+  { id: 'player',       label: 'On a bien joué 🎈',        test: (s) => s.minigames >= 3 },
+  { id: 'golden',       label: 'Chasseur de cœur d\'or 🥇', test: (s) => s.goldenCaught >= 1 },
+];
+
 export const STORAGE_KEY = 'tamalove.save.v1';

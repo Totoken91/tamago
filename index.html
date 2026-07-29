@@ -158,6 +158,71 @@
     }
     #toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+    /* ---- lien (bond) sous le nom ---- */
+    .bond-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; font-weight: 800; color: var(--accent-deep); }
+    .bond-sep { color: #b9cfa0; }
+    #days { color: #7f9a63; font-weight: 700; }
+    .streak { color: #ff8a3d; font-weight: 800; }
+    .bond-bar { margin-top: 5px; height: 6px; width: 168px; max-width: 52vw; border-radius: 999px; background: rgba(120,160,70,.2); overflow: hidden; }
+    #bond-fill { display: block; height: 100%; width: 100%; border-radius: 999px;
+      background: linear-gradient(90deg, #b6e84a, #6fb023); transform-origin: left; transform: scaleX(0); transition: transform .5s ease; }
+
+    /* ---- petit bouton (son) ---- */
+    .mini-btn {
+      position: absolute; top: calc(96px + env(safe-area-inset-top)); right: calc(18px + env(safe-area-inset-right));
+      width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--card-brd);
+      background: var(--card); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      box-shadow: var(--shadow); font-size: 20px; cursor: pointer; line-height: 1;
+      display: flex; align-items: center; justify-content: center; transition: transform .12s ease;
+    }
+    .mini-btn:active { transform: scale(.9); }
+
+    /* ---- bulle de pensée (demande de câlin) ---- */
+    .thought {
+      position: absolute; transform: translate(-50%, -100%) scale(.6);
+      background: #fff; color: #4a6a2b; font-weight: 800; font-size: 16px;
+      padding: 10px 16px; border-radius: 18px; box-shadow: var(--shadow);
+      opacity: 0; pointer-events: none; white-space: nowrap; transition: opacity .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1);
+    }
+    .thought::after { content: ''; position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%);
+      border: 8px solid transparent; border-top-color: #fff; border-bottom: 0; }
+    .thought.show { opacity: 1; transform: translate(-50%, -100%) scale(1); animation: thoughtbob 1.3s ease-in-out infinite; }
+    @keyframes thoughtbob { 0%,100% { margin-top: 0; } 50% { margin-top: -6px; } }
+
+    /* ---- z z z (sommeil) ---- */
+    .zzz { position: absolute; font-size: 22px; font-weight: 800; color: #8fa9d8; opacity: 0; pointer-events: none; transition: opacity .6s ease; text-shadow: 0 2px 6px rgba(120,150,210,.35); }
+    .zzz.show { opacity: .95; }
+    .zzz span { display: inline-block; animation: zfloat 2.4s ease-in-out infinite; }
+    .zzz span:nth-child(1) { font-size: 18px; animation-delay: .3s; }
+    .zzz span:nth-child(2) { font-size: 14px; animation-delay: .6s; }
+    @keyframes zfloat { 0%,100% { transform: translateY(0); opacity: .6; } 50% { transform: translateY(-8px); opacity: 1; } }
+
+    /* ---- cycle jour/nuit ---- */
+    #daynight { position: fixed; inset: 0; pointer-events: none; z-index: 1; background-color: rgba(0,0,0,0); transition: background-color 2.5s linear; }
+
+    /* ---- mini-jeu attrape-cœurs ---- */
+    #minigame { position: fixed; inset: 0; z-index: 6; pointer-events: none; }
+    #minigame.playing { background: radial-gradient(120% 80% at 50% 0%, rgba(120,90,150,.12), rgba(30,40,80,.18)); }
+    .fall-heart, .golden-heart {
+      position: absolute; top: 0; left: 0; border: none; background: none; padding: 0; cursor: pointer;
+      pointer-events: auto; will-change: transform; user-select: none; line-height: 1;
+    }
+    .fall-heart { font-size: 34px; filter: drop-shadow(0 3px 5px rgba(255,90,140,.35)); }
+    .golden-heart { font-size: 46px; filter: drop-shadow(0 0 12px rgba(255,205,60,.85)); animation: golddrift 7s linear forwards; }
+    .fall-heart.pop, .golden-heart.pop { animation: hpop .2s ease-out forwards; }
+    @keyframes hpop { to { transform: scale(1.8); opacity: 0; } }
+    @keyframes golddrift {
+      0%   { transform: translateX(var(--from, -12vw)) translateY(0) rotate(-10deg); }
+      50%  { transform: translateX(calc((var(--from) + var(--to)) / 2)) translateY(-30px) rotate(10deg); }
+      100% { transform: translateX(var(--to, 112vw)) translateY(0) rotate(-10deg); }
+    }
+    .mg-hud { position: fixed; top: calc(118px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+    .mg-title { font-weight: 800; color: #6a3f8f; background: rgba(255,255,255,.7); padding: 6px 16px; border-radius: 999px; box-shadow: var(--shadow); }
+    .mg-bar { width: 220px; max-width: 70vw; height: 8px; border-radius: 999px; background: rgba(120,110,160,.25); overflow: hidden; }
+    .mg-bar i { display: block; height: 100%; width: 100%; transform-origin: left; background: linear-gradient(90deg,#c58bff,#7a54ff); }
+    .mg-score { font-size: 28px; font-weight: 800; color: #7a54ff; text-shadow: 0 2px 8px rgba(122,84,255,.3); }
+
     /* ---- écran de chargement (splash soigné) ---- */
     #loader {
       position: fixed; inset: 0; z-index: 50; display: flex;
@@ -266,8 +331,15 @@
   <div id="ui">
     <div id="pet-card">
       <input id="pet-name" maxlength="16" spellcheck="false" aria-label="Nom de la créature" />
-      <div id="mood-label">Content·e 🙂</div>
+      <div id="mood-label">Tout va bien 🙂</div>
       <div id="mood-text"></div>
+      <div class="bond-row">
+        <span id="bond-lvl">Niv 1</span>
+        <span class="bond-sep">·</span>
+        <span id="days">Jour 1</span>
+        <span id="streak" class="streak"></span>
+      </div>
+      <div class="bond-bar" title="Lien"><i id="bond-fill"></i></div>
     </div>
 
     <div id="gauge">
@@ -315,9 +387,21 @@
       <button class="act" id="btn-play"><span class="cd-fill"></span><span class="emoji">🎈</span>Jouer<span class="cd-num"></span></button>
     </div>
 
+    <button id="btn-sound" class="mini-btn" aria-label="Son" title="Son">🔊</button>
+
+    <!-- bulle de pensée (elle réclame un câlin) -->
+    <div id="thought" class="thought"></div>
+    <!-- z z z pendant le sommeil -->
+    <div id="zzz" class="zzz">z<span>z</span><span>z</span></div>
+
     <div id="words"></div>
     <div id="toast"></div>
   </div>
+
+  <!-- teinte jour/nuit (CSS, au-dessus du canvas, sous l'UI) -->
+  <div id="daynight"></div>
+  <!-- calque du mini-jeu « attrape les cœurs » -->
+  <div id="minigame"></div>
 
   <!-- écran de chargement -->
   <div id="loader">

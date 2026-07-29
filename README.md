@@ -30,27 +30,41 @@ Puis ouvre **http://localhost:5173** dans un navigateur récent.
 | **Caresser** | Clique / glisse sur la créature | Petit gain + rebond (squash) |
 | **Câlin** 🤗 | Bouton (cooldown) | Gros gain d'amour |
 | **Complimenter** 💬 | Bouton | Gain moyen + mot doux flottant |
-| **Jouer** 🎈 | Bouton | La créature suit ton curseur quelques secondes |
+| **Jouer** 🎈 | Bouton | Lance le mini-jeu « attrape les cœurs » |
 
 La jauge d'**Amour** décroît lentement. Selon son niveau, la créature change
 d'humeur (rayonnante → contente → mélancolique → en manque d'affection), ce qui
 se voit sur sa teinte, son animation, ses particules et son petit texte d'humeur.
 Il n'y a **pas de game over** : même triste, on peut toujours la consoler.
 
-Ton nom de créature et son niveau d'amour sont **sauvegardés** (localStorage).
-Au retour, le temps écoulé est pris en compte — *« il t'attendait »* — sans
-jamais la laisser complètement vide.
+### Ce qui donne de la profondeur
+
+- **Lien & évolution** : un niveau de *Lien* permanent monte avec le temps et les
+  soins ; la créature **évolue** par paliers (taille + halo).
+- **Elle est vivante** : elle **réclame** parfois un câlin (bulle de pensée, bonus
+  si tu réponds), **suit ton curseur du regard**, et **dort la nuit** (cycle
+  jour/nuit basé sur l'heure réelle).
+- **Mini-jeu & surprises** : attrape-cœurs chronométré, **cœurs dorés** surprises,
+  petits **succès** et **série de visites** quotidienne.
+- **Sons & haptique** : petits sons doux (WebAudio, générés), vibration au câlin,
+  bouton 🔊 pour couper le son.
+
+Le nom, l'amour, le lien, les jours ensemble, la série, les succès et les stats
+sont **sauvegardés** (localStorage). Au retour, le temps écoulé est pris en
+compte (*« il t'attendait »*) sans jamais vider complètement la créature.
 
 ## 🗂️ Structure
 
 ```
 index.html            page + interface (HUD, styles, écran de chargement)
 src/
-  main.js             scène Three.js, post-process, boucle, interactions, UI
-  creature.js         créature (shader d'humeur, idle, squash & stretch, jeu)
+  main.js             scène Three.js, boucle, interactions, UI, systèmes de jeu
+  creature.js         créature (shader d'humeur + wobble jelly, idle, regard, sommeil, évolution)
   hearts.js           particules de cœurs (textures générées au runtime)
+  minigame.js         mini-jeu attrape-cœurs + cœur doré (overlay DOM)
+  audio.js            sons doux générés en WebAudio (aucun fichier)
   floatingText.js     mots doux flottants
-  storage.js          persistance localStorage + temps écoulé
+  storage.js          persistance localStorage (amour, lien, jours, succès…)
   config.js           toutes les constantes de gameplay & direction artistique
 assets/
   tamagogo.png        sprite du personnage (PNG transparent)
