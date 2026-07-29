@@ -32,8 +32,16 @@
       -webkit-touch-callout: none;
     }
 
+    /* ---- vignette CSS (remplace le post-process, gratuit) ---- */
+    #vignette {
+      position: fixed; inset: 0; pointer-events: none; z-index: 1;
+      background:
+        radial-gradient(ellipse at 50% 40%, rgba(255,247,214,0.12), rgba(255,247,214,0) 46%),
+        radial-gradient(ellipse 80% 80% at 50% 48%, rgba(0,0,0,0) 56%, rgba(28,38,14,0.34) 100%);
+    }
+
     /* ---- calque UI ---- */
-    #ui { position: fixed; inset: 0; pointer-events: none; user-select: none; }
+    #ui { position: fixed; inset: 0; pointer-events: none; user-select: none; z-index: 2; }
     #ui > * { pointer-events: auto; }
 
     /* ---- carte nom + humeur (haut gauche) ---- */
@@ -190,6 +198,8 @@
 </head>
 <body data-mood="content">
   <canvas id="scene"></canvas>
+  <!-- vignette + ambiance chaude (CSS, aucun coût GPU dans la boucle de rendu) -->
+  <div id="vignette"></div>
 
   <!-- calque interface -->
   <div id="ui">
@@ -255,8 +265,7 @@
   <script type="importmap">
   {
     "imports": {
-      "three": "./vendor/three/three.module.js",
-      "three/addons/": "./vendor/three/addons/"
+      "three": "./vendor/three/three.module.js"
     }
   }
   </script>

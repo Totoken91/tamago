@@ -8,6 +8,24 @@ import { MOOD_STYLE } from './config.js';
 
 // Shader minimal : échantillonne la texture puis applique teinte, saturation
 // et luminosité. Permet des couleurs vraiment « ternes » sur les états tristes.
+/** Halo radial doux (blanc → transparent) pour le glow des états heureux. */
+function makeGlowTexture() {
+  const s = 256;
+  const c = document.createElement('canvas');
+  c.width = c.height = s;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(s / 2, s / 2, 4, s / 2, s / 2, s / 2);
+  g.addColorStop(0, 'rgba(255,255,255,0.95)');
+  g.addColorStop(0.35, 'rgba(232,255,168,0.55)');
+  g.addColorStop(0.7, 'rgba(180,236,74,0.18)');
+  g.addColorStop(1, 'rgba(180,236,74,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, s, s);
+  const t = new THREE.Texture(c);
+  t.needsUpdate = true;
+  return t;
+}
+
 /** Petite texture radiale sombre pour l'ombre de contact au sol. */
 function makeShadowTexture() {
   const s = 128;
@@ -87,6 +105,16 @@ export class Creature {
     this.pivot.add(this.mesh);
     scene.add(this.pivot);
 
+    // halo doux derrière la créature (glow des états heureux) — additif, léger
+    this.glowSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: makeGlowTexture(), transparent: true, depthTest: false, depthWrite: false,
+      blending: THREE.AdditiveBlending, opacity: 0,
+    }));
+    this.glowSprite.position.z = -0.1;    // derrière le corps
+    scene.add(this.glowSprite);
+    this.glow = 0;         // intensité courante (lissée)
+    this._glowTarget = 0;  // intensité cible (selon l'humeur)
+
     // ombre de contact douce (ancre la créature au sol)
     this.shadow = new THREE.Sprite(new THREE.SpriteMaterial({
       map: makeShadowTexture(), transparent: true, depthTest: false, depthWrite: false,
@@ -142,6 +170,7 @@ export class Creature {
     this._bri = s.brightness;
     this.idleSpeed = s.idle;
     this.tremble = moodKey === 'needy' ? 1 : 0;
+    this._glowTarget = s.glow;
   }
 
   /**
@@ -220,6 +249,18 @@ export class Creature {
     this.shadow.position.set(this.pivot.position.x + this.contentXOffset, footY, -0.05);
     this.shadow.scale.set(ww * this.content.w * 1.2 * (1 + sq * 0.5), ww * this.content.w * 0.34, 1);
     this.shadow.material.opacity = 0.22 * (1 - Math.min(0.6, this.playT > 0 ? 0.3 : 0));
+
+    // --- halo (glow) : intensité lissée + douce pulsation, centré sur le corps
+    this.glow += (this._glowTarget - this.glow) * Math.min(1, dt * 2.5);
+    const pulse = 1 + Math.sin(this.time * 1.8) * 0.06;
+    const gs = ww * this.content.w * 2.5 * pulse;
+    this.glowSprite.scale.set(gs, gs, 1);
+    this.glowSprite.position.set(
+      this.pivot.position.x + this.contentXOffset,
+      this.pivot.position.y + this.contentCenterOffset,
+      -0.1
+    );
+    this.glowSprite.material.opacity = this.glow * (0.9 + Math.sin(this.time * 1.8) * 0.1);
 
     // --- lissage des uniforms du shader (transitions de palier fluides) ------
     const u = this.mat.uniforms;

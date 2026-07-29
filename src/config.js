@@ -37,11 +37,13 @@ export const MOODS = [
 
 // Réglages visuels par état émotionnel (pilotent le shader de la créature,
 // la vitesse d'animation, le bloom et l'ambiance de particules).
+// `glow` = intensité du halo doux derrière la créature (0..1), rendu par un
+// simple sprite additif — pas de post-process coûteux.
 export const MOOD_STYLE = {
-  radiant:     { tint: [1.03, 1.04, 1.0], saturation: 1.08, brightness: 1.06, idle: 1.15, bloom: 0.65, ambientHearts: 1.0,  label: 'Rayonnant·e ✨' },
-  content:     { tint: [1.0, 1.0, 1.0],   saturation: 1.0,  brightness: 1.0,  idle: 1.0,  bloom: 0.32, ambientHearts: 0.15, label: 'Content·e 🙂' },
-  melancholic: { tint: [0.88, 0.92, 0.9], saturation: 0.6,  brightness: 0.9,  idle: 0.62, bloom: 0.14, ambientHearts: 0.0,  label: 'Mélancolique 🌧️' },
-  needy:       { tint: [0.82, 0.86, 0.86], saturation: 0.42, brightness: 0.82, idle: 0.5,  bloom: 0.08, ambientHearts: 0.0,  label: "En manque d'affection 💔" },
+  radiant:     { tint: [1.02, 1.03, 1.0], saturation: 1.05, brightness: 1.03, idle: 1.15, glow: 0.55, ambientHearts: 1.0,  label: 'Rayonnant·e ✨' },
+  content:     { tint: [1.0, 1.0, 1.0],   saturation: 1.0,  brightness: 1.0,  idle: 1.0,  glow: 0.16, ambientHearts: 0.15, label: 'Content·e 🙂' },
+  melancholic: { tint: [0.88, 0.92, 0.9], saturation: 0.6,  brightness: 0.9,  idle: 0.62, glow: 0.04, ambientHearts: 0.0,  label: 'Mélancolique 🌧️' },
+  needy:       { tint: [0.82, 0.86, 0.86], saturation: 0.42, brightness: 0.82, idle: 0.5,  glow: 0.0,  ambientHearts: 0.0,  label: "En manque d'affection 💔" },
 };
 
 // Couleurs & quantités de cœurs par action (r,g,b en 0..1).

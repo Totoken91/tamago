@@ -4,12 +4,6 @@
 //  l'UI. « TamaLove » : une créature qui se nourrit de l'amour qu'on lui porte.
 // ============================================================================
 import * as THREE from 'three';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-
 import { LOVE, ACTIONS, MOODS, MOOD_STYLE, HEARTS, SWEET_WORDS, MOOD_TEXTS } from './config.js';
 import { loadState, saveState } from './storage.js';
 import { Creature } from './creature.js';
@@ -69,7 +63,7 @@ manager.onProgress = (_url, loaded, total) => {
 };
 const texLoader = new THREE.TextureLoader(manager);
 
-let bgMesh, creature, hearts, floating, composer, bloomPass, vignettePass;
+let bgMesh, creature, hearts, floating;
 
 function configureTexture(t) {
   t.colorSpace = THREE.SRGBColorSpace;
@@ -112,7 +106,6 @@ function computeContentBox(image, threshold = 40) {
 
 manager.onLoad = () => {
   buildScene();
-  buildPost();
   wireUI();
   resize();
   welcomeBack();
@@ -145,56 +138,15 @@ function buildScene() {
 }
 
 // ---------------------------------------------------------------------------
-//  Post-processing : bloom subtil + vignette chaleureuse
-// ---------------------------------------------------------------------------
-function buildPost() {
-  composer = new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene, camera));
-
-  // seuil élevé : seuls les vrais éclats (reflets, étincelles) « bloom »
-  // → glow raffiné, pas de halo baveux sur les murs pâles.
-  bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.28, 0.5, 0.9);
-  composer.addPass(bloomPass);
-
-  composer.addPass(new OutputPass());
-
-  // Vignette + léger réchauffement des couleurs
-  vignettePass = new ShaderPass({
-    uniforms: {
-      tDiffuse: { value: null },
-      uStrength: { value: 0.9 },
-      uWarm: { value: 0.05 },
-    },
-    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
-    fragmentShader: `
-      uniform sampler2D tDiffuse;
-      uniform float uStrength;
-      uniform float uWarm;
-      varying vec2 vUv;
-      void main(){
-        vec4 c = texture2D(tDiffuse, vUv);
-        vec2 d = vUv - 0.5;
-        float vig = smoothstep(0.9, 0.28, length(d) * uStrength);
-        c.rgb *= mix(0.7, 1.02, vig);                       // coins plus profonds
-        c.rgb += vec3(uWarm, uWarm * 0.55, -uWarm * 0.5) * (1.0 - vig); // bords chauds
-        gl_FragColor = c;
-      }`,
-  });
-  vignettePass.renderToScreen = true;
-  composer.addPass(vignettePass);
-}
-
-// ---------------------------------------------------------------------------
 //  Mise en page « responsive » (cover du fond, échelle & position créature)
 // ---------------------------------------------------------------------------
 function resize() {
   const w = window.innerWidth, h = window.innerHeight;
   renderer.setSize(w, h);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  // pixelRatio plafonné à 1.75 : net sans surcharger les écrans très denses
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
-  if (composer) composer.setSize(w, h);
-  if (bloomPass) bloomPass.setSize(w, h);
 
   if (!bgMesh) return;
 
@@ -487,9 +439,7 @@ function loop(now) {
     }
   }
 
-  // --- bloom piloté par l'humeur (glow subtil sur les états heureux) -------
-  const targetBloom = MOOD_STYLE[state.currentMood].bloom;
-  bloomPass.strength += (targetBloom - bloomPass.strength) * Math.min(1, dt * 2);
+  // (le glow des états heureux est géré par la créature — sprite additif)
 
   // --- jauge lissée (lerp, pas de saut sec) --------------------------------
   state.displayLove += (state.love - state.displayLove) * Math.min(1, dt * 4);
@@ -510,7 +460,7 @@ function loop(now) {
   saveTimer -= dt;
   if (saveTimer <= 0) { saveState(state.love, state.name); saveTimer = 5; }
 
-  composer.render();
+  renderer.render(scene, camera);
   requestAnimationFrame(loop);
 }
 
