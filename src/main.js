@@ -225,6 +225,14 @@ function resize() {
   creature.home.x = -creature.contentXOffset;          // centre le corps visible
 }
 window.addEventListener('resize', resize);
+// mobile : recadrer quand l'orientation change ou que la barre d'URL apparaît/disparaît
+window.addEventListener('orientationchange', () => setTimeout(resize, 150));
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', resize);
+  window.visualViewport.addEventListener('scroll', resize);
+}
+// évite le menu contextuel / la sélection lors d'un appui long sur la créature
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
 // ---------------------------------------------------------------------------
 //  Interactions — parallaxe, caresse (raycast), jeu (suivi curseur)
@@ -257,15 +265,16 @@ function hitCreature() {
 }
 
 canvas.addEventListener('pointerdown', (e) => {
+  e.preventDefault();                       // pas de sélection/scroll sur tactile
   updatePointer(e);
   isPointerDown = true;
   if (hitCreature()) doCaress(true);
-});
+}, { passive: false });
 window.addEventListener('pointermove', (e) => {
   updatePointer(e);
-  if (isPointerDown && creature && hitCreature()) doCaress(false);
+  if (isPointerDown && creature && hitCreature()) { e.preventDefault(); doCaress(false); }
   if (creature && creature.playT > 0) creature.setCursorWorld(worldAtPointer());
-});
+}, { passive: false });
 window.addEventListener('pointerup', () => { isPointerDown = false; });
 window.addEventListener('pointercancel', () => { isPointerDown = false; });
 

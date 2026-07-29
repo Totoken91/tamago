@@ -2,7 +2,11 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#eafbe4" />
   <title>TamaLove — nourris-le d'amour</title>
   <style>
     :root {
@@ -16,8 +20,17 @@
       font-family: 'Baloo 2', 'Segoe UI', 'Nunito', system-ui, sans-serif;
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { margin: 0; height: 100%; overflow: hidden; background: #dfeffb; }
-    #scene { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+    html, body {
+      margin: 0; height: 100%; overflow: hidden; background: #dfeffb;
+      overscroll-behavior: none;                 /* pas de pull-to-refresh */
+      position: fixed; inset: 0; width: 100%;     /* fige la page sur mobile */
+      -webkit-user-select: none; user-select: none;
+    }
+    #scene {
+      position: fixed; inset: 0; width: 100%; height: 100%; display: block;
+      touch-action: none;                        /* le drag = caresse, pas scroll/zoom */
+      -webkit-touch-callout: none;
+    }
 
     /* ---- calque UI ---- */
     #ui { position: fixed; inset: 0; pointer-events: none; user-select: none; }
@@ -25,7 +38,8 @@
 
     /* ---- carte nom + humeur (haut gauche) ---- */
     #pet-card {
-      position: absolute; top: 18px; left: 18px;
+      position: absolute;
+      top: calc(18px + env(safe-area-inset-top)); left: calc(18px + env(safe-area-inset-left));
       background: var(--card); border: 1px solid var(--card-brd);
       backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
       border-radius: 20px; padding: 12px 16px; box-shadow: var(--shadow);
@@ -42,7 +56,8 @@
 
     /* ---- jauge cœur (haut droite) ---- */
     #gauge {
-      position: absolute; top: 18px; right: 18px;
+      position: absolute;
+      top: calc(18px + env(safe-area-inset-top)); right: calc(18px + env(safe-area-inset-right));
       background: var(--card); border: 1px solid var(--card-brd);
       backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
       border-radius: 20px; padding: 12px; box-shadow: var(--shadow);
@@ -56,7 +71,8 @@
 
     /* ---- barre d'actions (bas centre) ---- */
     #actions {
-      position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
+      position: absolute; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
       display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; padding: 0 12px;
     }
     .act {
@@ -143,12 +159,32 @@
       #gauge-pct { font-size: 17px; min-width: 40px; }
       #gauge-label { display: none; }
       /* barre d'action : une seule rangée, boutons qui se partagent la largeur */
-      #actions { gap: 8px; bottom: 16px; left: 8px; right: 8px; transform: none;
-                 flex-wrap: nowrap; padding: 0; }
-      .act { flex: 1 1 0; min-width: 0; padding: 8px 4px 7px; font-size: 12px; border-radius: 16px; }
+      #actions {
+        gap: 8px; transform: none; flex-wrap: nowrap;
+        bottom: calc(12px + env(safe-area-inset-bottom));
+        left: calc(8px + env(safe-area-inset-left));
+        right: calc(8px + env(safe-area-inset-right));
+        padding: 0;
+      }
+      .act { flex: 1 1 0; min-width: 0; min-height: 56px; padding: 8px 4px 7px; font-size: 12px; border-radius: 16px; }
       .act .emoji { font-size: 20px; }
       #hint { display: none; }                     /* la caresse marche quand même */
-      #toast { top: auto; bottom: 92px; font-size: 13px; }
+      #toast { top: auto; bottom: calc(84px + env(safe-area-inset-bottom)); font-size: 13px; }
+    }
+
+    /* écrans bas (mobile paysage) : HUD compact pour libérer de la hauteur */
+    @media (max-height: 480px) {
+      #pet-card, #gauge { padding: 7px 10px; }
+      #pet-name { font-size: 16px; width: 130px; }
+      #mood-text { display: none; }
+      .heart-wrap { width: 40px; height: 38px; }
+      #gauge-pct { font-size: 16px; }
+      #gauge-label { display: none; }
+      #hint { display: none; }
+      #actions { gap: 8px; bottom: calc(8px + env(safe-area-inset-bottom));
+                 left: auto; right: calc(10px + env(safe-area-inset-right)); transform: none; flex-wrap: nowrap; }
+      .act { min-width: 84px; min-height: 52px; padding: 6px 10px; font-size: 12px; }
+      .act .emoji { font-size: 18px; }
     }
   </style>
 </head>
