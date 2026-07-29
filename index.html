@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>TamaLove — nourris-le d'amour</title>
+  <style>
+    :root {
+      --ink: #2f4718;
+      --card: rgba(255, 255, 255, 0.62);
+      --card-brd: rgba(255, 255, 255, 0.8);
+      --accent: #8fce38;
+      --accent-deep: #6fb023;
+      --pink: #ff77a1;
+      --shadow: 0 10px 30px rgba(80, 110, 40, 0.18);
+      font-family: 'Baloo 2', 'Segoe UI', 'Nunito', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #dfeffb; }
+    #scene { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+
+    /* ---- calque UI ---- */
+    #ui { position: fixed; inset: 0; pointer-events: none; user-select: none; }
+    #ui > * { pointer-events: auto; }
+
+    /* ---- carte nom + humeur (haut gauche) ---- */
+    #pet-card {
+      position: absolute; top: 18px; left: 18px;
+      background: var(--card); border: 1px solid var(--card-brd);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-radius: 20px; padding: 12px 16px; box-shadow: var(--shadow);
+      max-width: 62vw;
+    }
+    #pet-name {
+      font-size: 22px; font-weight: 800; color: var(--ink);
+      background: transparent; border: none; border-bottom: 2px dashed transparent;
+      width: 190px; max-width: 52vw; padding: 0 0 2px; outline: none;
+    }
+    #pet-name:focus { border-bottom-color: var(--accent); }
+    #mood-label { font-size: 13px; font-weight: 700; color: var(--accent-deep); margin-top: 4px; }
+    #mood-text { font-size: 13px; color: #6a7d55; margin-top: 2px; font-style: italic; min-height: 16px; }
+
+    /* ---- jauge cœur (haut droite) ---- */
+    #gauge {
+      position: absolute; top: 18px; right: 18px;
+      background: var(--card); border: 1px solid var(--card-brd);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-radius: 20px; padding: 12px; box-shadow: var(--shadow);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .heart-wrap { position: relative; width: 60px; height: 56px; }
+    .heart-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    #gauge-fill-clip { transform-box: fill-box; transform-origin: bottom; transition: none; }
+    #gauge-pct { font-size: 20px; font-weight: 800; color: var(--accent-deep); min-width: 46px; text-align: center; }
+    #gauge-label { font-size: 11px; color: #8a9b74; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; }
+
+    /* ---- barre d'actions (bas centre) ---- */
+    #actions {
+      position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
+      display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; padding: 0 12px;
+    }
+    .act {
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      min-width: 96px; padding: 12px 16px 10px;
+      border: 1px solid var(--card-brd); border-radius: 20px;
+      background: var(--card); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      box-shadow: var(--shadow); cursor: pointer; color: var(--ink);
+      font-family: inherit; font-weight: 800; font-size: 15px;
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .act:hover { transform: translateY(-3px); }
+    .act:active { transform: translateY(0) scale(.96); }
+    .act .emoji { font-size: 26px; line-height: 1; }
+    .act .cd-num { font-size: 11px; color: var(--accent-deep); height: 12px; }
+    .act .cd-fill {
+      position: absolute; inset: 0; top: auto; height: 100%;
+      background: rgba(120, 150, 70, 0.28); transform-origin: bottom; transform: scaleY(0);
+      pointer-events: none;
+    }
+    .act.cooling { cursor: default; filter: grayscale(.35) opacity(.85); }
+    .act.cooling:hover { transform: none; }
+
+    /* ---- indice caresse ---- */
+    #hint {
+      position: absolute; left: 50%; bottom: 108px; transform: translateX(-50%);
+      font-size: 13px; font-weight: 700; color: #6a7d55;
+      background: var(--card); padding: 6px 14px; border-radius: 999px;
+      border: 1px solid var(--card-brd); box-shadow: var(--shadow);
+      opacity: .9; transition: opacity .6s ease; pointer-events: none;
+    }
+    #hint.gone { opacity: 0; }
+
+    /* ---- mots doux flottants (purement visuel, laisse passer les clics) ---- */
+    #words { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    .sweet-word {
+      position: absolute; transform: translate(-50%, -50%) rotate(var(--tilt));
+      font-weight: 800; font-size: 20px; color: #ff5c86;
+      text-shadow: 0 2px 10px rgba(255, 120, 160, .35), 0 0 2px #fff;
+      white-space: nowrap; animation: floatUp 2.2s ease-out forwards;
+    }
+    @keyframes floatUp {
+      0%   { opacity: 0; transform: translate(-50%, -50%) scale(.6) rotate(var(--tilt)); }
+      18%  { opacity: 1; transform: translate(-50%, -70%) scale(1.08) rotate(var(--tilt)); }
+      100% { opacity: 0; transform: translate(-50%, -190%) scale(1) rotate(var(--tilt)); }
+    }
+
+    /* ---- toast ---- */
+    #toast {
+      position: absolute; left: 50%; top: 84px; transform: translate(-50%, -14px);
+      background: rgba(47, 71, 24, 0.9); color: #f4ffe0; font-weight: 700; font-size: 14px;
+      padding: 10px 18px; border-radius: 999px; box-shadow: var(--shadow);
+      opacity: 0; transition: opacity .4s ease, transform .4s ease; pointer-events: none;
+      max-width: 80vw; text-align: center;
+    }
+    #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    /* ---- écran de chargement ---- */
+    #loader {
+      position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 22px;
+      background: radial-gradient(circle at 50% 40%, #eafbe4, #cfeaf7);
+      transition: opacity .6s ease;
+    }
+    #loader.hidden { opacity: 0; pointer-events: none; }
+    .blob {
+      width: 90px; height: 90px; border-radius: 46% 54% 52% 48% / 55% 52% 48% 45%;
+      background: radial-gradient(circle at 38% 32%, #eaffb0, #9ad83a 60%, #6fb823);
+      box-shadow: 0 12px 30px rgba(110, 176, 35, .35); animation: breathe 1.6s ease-in-out infinite;
+    }
+    @keyframes breathe { 0%,100% { transform: scale(1) translateY(0);} 50% { transform: scale(1.06) translateY(-4px);} }
+    #loader h1 { margin: 0; font-size: 26px; color: #4f7a1f; font-weight: 800; letter-spacing: .02em; }
+    #loader p { margin: -12px 0 0; color: #6a8b48; font-size: 14px; }
+    .loader-track { width: 200px; height: 8px; border-radius: 999px; background: rgba(120,160,70,.2); overflow: hidden; }
+    #loader-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #b6e84a, #6fb023); transition: width .3s ease; }
+
+    @media (max-width: 560px) {
+      #pet-card, #gauge { padding: 8px 11px; }
+      #pet-card { max-width: 56vw; }
+      #pet-name { font-size: 17px; width: 150px; }
+      #mood-text { display: none; }               /* garde la carte compacte */
+      .heart-wrap { width: 46px; height: 44px; }
+      #gauge-pct { font-size: 17px; min-width: 40px; }
+      #gauge-label { display: none; }
+      /* barre d'action : une seule rangée, boutons qui se partagent la largeur */
+      #actions { gap: 8px; bottom: 16px; left: 8px; right: 8px; transform: none;
+                 flex-wrap: nowrap; padding: 0; }
+      .act { flex: 1 1 0; min-width: 0; padding: 8px 4px 7px; font-size: 12px; border-radius: 16px; }
+      .act .emoji { font-size: 20px; }
+      #hint { display: none; }                     /* la caresse marche quand même */
+      #toast { top: auto; bottom: 92px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body data-mood="content">
+  <canvas id="scene"></canvas>
+
+  <!-- calque interface -->
+  <div id="ui">
+    <div id="pet-card">
+      <input id="pet-name" maxlength="16" spellcheck="false" aria-label="Nom de la créature" />
+      <div id="mood-label">Content·e 🙂</div>
+      <div id="mood-text"></div>
+    </div>
+
+    <div id="gauge">
+      <div class="heart-wrap">
+        <svg class="heart-svg" viewBox="0 0 100 92" aria-hidden="true">
+          <defs>
+            <clipPath id="heartClip">
+              <path d="M50 86 C 12 58 6 34 6 24 C 6 8 22 2 34 8 C 42 12 48 20 50 26 C 52 20 58 12 66 8 C 78 2 94 8 94 24 C 94 34 88 58 50 86 Z"/>
+            </clipPath>
+          </defs>
+          <!-- fond du cœur -->
+          <path d="M50 86 C 12 58 6 34 6 24 C 6 8 22 2 34 8 C 42 12 48 20 50 26 C 52 20 58 12 66 8 C 78 2 94 8 94 24 C 94 34 88 58 50 86 Z"
+                fill="#e7f0d8" stroke="#b9d68a" stroke-width="3"/>
+          <!-- remplissage animé -->
+          <g clip-path="url(#heartClip)">
+            <rect id="gauge-fill" x="0" y="0" width="100" height="92" fill="url(#hg)"
+                  style="transform-box: fill-box; transform-origin: bottom; transform: scaleY(.7);"/>
+          </g>
+          <defs>
+            <linearGradient id="hg" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stop-color="#ff6f9c"/>
+              <stop offset="100%" stop-color="#ff9ec4"/>
+            </linearGradient>
+          </defs>
+          <path d="M50 86 C 12 58 6 34 6 24 C 6 8 22 2 34 8 C 42 12 48 20 50 26 C 52 20 58 12 66 8 C 78 2 94 8 94 24 C 94 34 88 58 50 86 Z"
+                fill="none" stroke="#ff9ec4" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div>
+        <div id="gauge-label">Amour</div>
+        <div id="gauge-pct">70%</div>
+      </div>
+    </div>
+
+    <div id="hint">Caresse-moi ✋ (clique &amp; glisse)</div>
+
+    <div id="actions">
+      <button class="act" id="btn-hug"><span class="cd-fill"></span><span class="emoji">🤗</span>Câlin<span class="cd-num"></span></button>
+      <button class="act" id="btn-compliment"><span class="cd-fill"></span><span class="emoji">💬</span>Complimenter<span class="cd-num"></span></button>
+      <button class="act" id="btn-play"><span class="cd-fill"></span><span class="emoji">🎈</span>Jouer<span class="cd-num"></span></button>
+    </div>
+
+    <div id="words"></div>
+    <div id="toast"></div>
+  </div>
+
+  <!-- écran de chargement -->
+  <div id="loader">
+    <div class="blob"></div>
+    <h1>TamaLove</h1>
+    <p>Réveille ta créature…</p>
+    <div class="loader-track"><div id="loader-bar"></div></div>
+  </div>
+
+  <!-- Three.js (r160) livré localement dans vendor/ — aucun accès réseau requis -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three/three.module.js",
+      "three/addons/": "./vendor/three/addons/"
+    }
+  }
+  </script>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

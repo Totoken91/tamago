@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="720" viewBox="0 0 640 720">
+  <defs>
+    <!-- Main body jelly gradient -->
+    <radialGradient id="body" cx="42%" cy="34%" r="72%">
+      <stop offset="0%"  stop-color="#eaffb0"/>
+      <stop offset="38%" stop-color="#c6f45a"/>
+      <stop offset="72%" stop-color="#9ad83a"/>
+      <stop offset="100%" stop-color="#6fb823"/>
+    </radialGradient>
+    <radialGradient id="bulb" cx="40%" cy="32%" r="75%">
+      <stop offset="0%"  stop-color="#f2ffc4"/>
+      <stop offset="55%" stop-color="#bff04f"/>
+      <stop offset="100%" stop-color="#8ccd33"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dfff88"/>
+      <stop offset="100%" stop-color="#5aa61f"/>
+    </linearGradient>
+    <radialGradient id="eye" cx="38%" cy="30%" r="80%">
+      <stop offset="0%"  stop-color="#4a6a2b"/>
+      <stop offset="45%" stop-color="#26410f"/>
+      <stop offset="100%" stop-color="#0f2405"/>
+    </radialGradient>
+    <radialGradient id="cheek" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff9ec4" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#ff9ec4" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+
+  <!-- ===== ANTENNA / DROPLET BULB ===== -->
+  <path d="M320 40
+           C 372 40 410 82 410 132
+           C 410 176 378 206 344 224
+           L 344 250 L 296 250 L 296 224
+           C 262 206 230 176 230 132
+           C 230 82 268 40 320 40 Z"
+        fill="url(#rim)"/>
+  <circle cx="320" cy="126" r="80" fill="url(#bulb)"/>
+  <ellipse cx="292" cy="96" rx="26" ry="18" fill="#ffffff" opacity="0.85" filter="url(#soft)"/>
+  <ellipse cx="352" cy="150" rx="10" ry="7" fill="#ffffff" opacity="0.55"/>
+
+  <!-- ===== BODY ===== -->
+  <!-- outer rim -->
+  <path d="M320 232
+           C 470 232 588 350 588 500
+           C 588 630 470 700 320 700
+           C 170 700 52 630 52 500
+           C 52 350 170 232 320 232 Z"
+        fill="url(#rim)"/>
+  <!-- inner jelly -->
+  <path d="M320 250
+           C 456 250 566 358 566 500
+           C 566 620 456 682 320 682
+           C 184 682 74 620 74 500
+           C 74 358 184 250 320 250 Z"
+        fill="url(#body)"/>
+
+  <!-- sparkles inside jelly -->
+  <g fill="#ffffff">
+    <circle cx="470" cy="430" r="9" opacity="0.9"/>
+    <circle cx="500" cy="470" r="5" opacity="0.7"/>
+    <circle cx="180" cy="470" r="6" opacity="0.75"/>
+    <circle cx="150" cy="540" r="4" opacity="0.6"/>
+    <circle cx="430" cy="600" r="5" opacity="0.6"/>
+    <circle cx="250" cy="640" r="4" opacity="0.5"/>
+    <circle cx="520" cy="560" r="3.5" opacity="0.5"/>
+    <circle cx="120" cy="420" r="3.5" opacity="0.55"/>
+  </g>
+  <!-- star sparkle -->
+  <path d="M175 400 l6 16 16 6 -16 6 -6 16 -6 -16 -16 -6 16 -6 z" fill="#ffffff" opacity="0.9"/>
+
+  <!-- big glossy highlight -->
+  <ellipse cx="245" cy="360" rx="70" ry="46" fill="#ffffff" opacity="0.5" filter="url(#soft)"/>
+  <ellipse cx="480" cy="380" rx="22" ry="14" fill="#ffffff" opacity="0.55"/>
+
+  <!-- ===== FACE ===== -->
+  <!-- cheeks -->
+  <ellipse cx="228" cy="540" rx="42" ry="26" fill="url(#cheek)"/>
+  <ellipse cx="420" cy="540" rx="42" ry="26" fill="url(#cheek)"/>
+
+  <!-- eyes -->
+  <g>
+    <ellipse cx="256" cy="500" rx="40" ry="52" fill="url(#eye)"/>
+    <ellipse cx="392" cy="500" rx="40" ry="52" fill="url(#eye)"/>
+    <!-- big shines -->
+    <circle cx="244" cy="480" r="15" fill="#ffffff"/>
+    <circle cx="380" cy="480" r="15" fill="#ffffff"/>
+    <!-- small shines -->
+    <circle cx="270" cy="520" r="7" fill="#ffffff" opacity="0.9"/>
+    <circle cx="406" cy="520" r="7" fill="#ffffff" opacity="0.9"/>
+    <!-- warm iris glint -->
+    <circle cx="262" cy="512" r="9" fill="#b8e654" opacity="0.5"/>
+    <circle cx="398" cy="512" r="9" fill="#b8e654" opacity="0.5"/>
+  </g>
+
+  <!-- mouth : gentle w -->
+  <path d="M300 566
+           q 20 22 40 0
+           q 20 22 40 0"
+        fill="none" stroke="#274012" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"
+        transform="translate(-20,0)"/>
+</svg>
