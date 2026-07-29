@@ -81,7 +81,34 @@ function configureTexture(t) {
 }
 
 const roomTex = texLoader.load('./assets/room.png', configureTexture);
-const petTex = texLoader.load('./assets/creature.png', configureTexture);
+const petTex = texLoader.load('./assets/tamagogo.png', configureTexture);
+
+/**
+ * Mesure la boîte englobante du corps opaque d'un sprite (ignore la marge
+ * transparente et le halo). Rend l'échelle/pose robustes à n'importe quel PNG.
+ * @returns {{L,R,T,B,cx,cy,w,h}} fractions 0..1, y depuis le haut
+ */
+function computeContentBox(image, threshold = 40) {
+  const W = image.width, H = image.height;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(image, 0, 0);
+  const d = ctx.getImageData(0, 0, W, H).data;
+  let minx = W, miny = H, maxx = 0, maxy = 0, found = false;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (d[(y * W + x) * 4 + 3] >= threshold) {
+        found = true;
+        if (x < minx) minx = x; if (x > maxx) maxx = x;
+        if (y < miny) miny = y; if (y > maxy) maxy = y;
+      }
+    }
+  }
+  if (!found) return { L: 0, R: 1, T: 0, B: 1, cx: 0.5, cy: 0.5, w: 1, h: 1 };
+  const L = minx / W, R = (maxx + 1) / W, T = miny / H, B = (maxy + 1) / H;
+  return { L, R, T, B, cx: (L + R) / 2, cy: (T + B) / 2, w: R - L, h: B - T };
+}
 
 manager.onLoad = () => {
   buildScene();
@@ -104,8 +131,9 @@ function buildScene() {
   bgMesh.position.z = BG_Z;
   scene.add(bgMesh);
 
-  // Créature
-  creature = new Creature(scene, petTex);
+  // Créature — mesure du corps visible pour un cadrage/pose corrects
+  const contentBox = computeContentBox(petTex.image);
+  creature = new Creature(scene, petTex, contentBox);
   creature.applyMood(state.currentMood);
 
   // Particules de cœurs + calque des mots doux
@@ -183,18 +211,18 @@ function resize() {
   const distC = camera.position.z;
   const vhC = 2 * Math.tan((camera.fov * Math.PI / 180) / 2) * distC;
 
-  // hauteur cible + marge basse dépendent du format (portrait mobile = plus
-  // de place sous la créature pour la rangée de boutons).
+  // hauteur cible du CORPS VISIBLE + marge basse selon le format
+  // (portrait mobile = plus de place sous la créature pour les boutons).
   const portrait = h > w;
-  const heightFrac = w < 640 ? (portrait ? 0.26 : 0.34) : 0.44;
+  const heightFrac = w < 640 ? (portrait ? 0.30 : 0.40) : 0.46;
   const targetHeight = vhC * heightFrac;
-  const worldWidth = targetHeight / creature.baseAspect;
-  creature.setScale(worldWidth);
+  creature.setContentHeight(targetHeight);
 
-  // posée sur le tapis : bas de la créature au-dessus de la barre d'action
+  // posée sur le tapis : bas VISIBLE du corps au-dessus de la barre d'action.
   const bottomMargin = vhC * (w < 640 ? 0.22 : 0.16);
-  creature.home.y = -vhC / 2 + targetHeight / 2 + bottomMargin;
-  creature.home.x = 0;
+  const contentBottomY = -vhC / 2 + bottomMargin;      // où poser les « pieds »
+  creature.home.y = contentBottomY - creature.contentBottomOffset;
+  creature.home.x = -creature.contentXOffset;          // centre le corps visible
 }
 window.addEventListener('resize', resize);
 

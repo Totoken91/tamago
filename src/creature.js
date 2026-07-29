@@ -53,10 +53,19 @@ const FRAG = /* glsl */`
 `;
 
 export class Creature {
-  constructor(scene, texture) {
+  /**
+   * @param {THREE.Texture} texture  sprite du perso (PNG transparent)
+   * @param {object} contentBox  boîte englobante du corps visible en fractions
+   *   {L,R,T,B,cx,cy,w,h} (0..1, y depuis le haut). Permet de dimensionner /
+   *   poser n'importe quel PNG (avec marge transparente) correctement.
+   */
+  constructor(scene, texture, contentBox) {
     const w = 1;
     const h = texture.image.height / texture.image.width; // conserve le ratio
     const geo = new THREE.PlaneGeometry(w, h);
+
+    // boîte du contenu (par défaut : tout le cadre)
+    this.content = contentBox || { L: 0, R: 1, T: 0, B: 1, cx: 0.5, cy: 0.5, w: 1, h: 1 };
 
     this.mat = new THREE.ShaderMaterial({
       uniforms: {
@@ -135,10 +144,22 @@ export class Creature {
     this.tremble = moodKey === 'needy' ? 1 : 0;
   }
 
-  /** Taille de référence en unités monde (largeur du plane). */
-  setScale(worldWidth) {
-    this._worldWidth = worldWidth;
+  /**
+   * Dimensionne pour que le CORPS VISIBLE (pas le cadre transparent) fasse
+   * `worldHeight` unités de haut.
+   */
+  setContentHeight(worldHeight) {
+    this._worldWidth = worldHeight / (this.baseAspect * this.content.h);
   }
+
+  // --- ancrages (monde) dérivés de la boîte du contenu ----------------------
+  get _ww() { return this._worldWidth || 1; }
+  /** décalage vertical centre-pivot → bas visible du corps (négatif = dessous). */
+  get contentBottomOffset() { return this.baseAspect * (0.5 - this.content.B) * this._ww; }
+  /** décalage vertical centre-pivot → centre visible du corps. */
+  get contentCenterOffset() { return this.baseAspect * (0.5 - this.content.cy) * this._ww; }
+  /** décalage horizontal centre-pivot → centre visible du corps. */
+  get contentXOffset() { return (this.content.cx - 0.5) * this._ww; }
 
   update(dt) {
     this.time += dt * this.idleSpeed;
@@ -194,10 +215,10 @@ export class Creature {
     this.pivot.scale.set(ww * sx, ww * sy, 1);
     this.mesh.rotation.z = Math.sin(this.time * 0.8) * 0.02;
 
-    // ombre au sol : suit x, reste au niveau des « pieds », s'élargit au squash
-    const footY = this.home.y - ww * this.baseAspect * 0.5 + ww * 0.04;
-    this.shadow.position.set(this.pivot.position.x, footY, -0.05);
-    this.shadow.scale.set(ww * 1.5 * (1 + sq * 0.5), ww * 0.34, 1);
+    // ombre au sol : sous les « pieds » visibles du corps, s'élargit au squash
+    const footY = this.home.y + this.baseAspect * (0.5 - this.content.B) * ww + ww * 0.02;
+    this.shadow.position.set(this.pivot.position.x + this.contentXOffset, footY, -0.05);
+    this.shadow.scale.set(ww * this.content.w * 1.2 * (1 + sq * 0.5), ww * this.content.w * 0.34, 1);
     this.shadow.material.opacity = 0.22 * (1 - Math.min(0.6, this.playT > 0 ? 0.3 : 0));
 
     // --- lissage des uniforms du shader (transitions de palier fluides) ------
@@ -207,11 +228,11 @@ export class Creature {
     u.uBrightness.value += (this._bri - u.uBrightness.value) * Math.min(1, dt * 3);
   }
 
-  /** Position monde approximative du « cœur » de la créature (pour émettre). */
+  /** Position monde du « cœur » du corps visible (pour émettre les particules). */
   get worldCenter() {
     return new THREE.Vector3(
-      this.pivot.position.x,
-      this.pivot.position.y + (this._worldWidth || 1) * this.baseAspect * 0.15,
+      this.pivot.position.x + this.contentXOffset,
+      this.pivot.position.y + this.contentCenterOffset,
       this.pivot.position.z
     );
   }

@@ -53,18 +53,25 @@ src/
   storage.js          persistance localStorage + temps écoulé
   config.js           toutes les constantes de gameplay & direction artistique
 assets/
-  creature.png        sprite du personnage (PNG transparent)
+  tamagogo.png        sprite du personnage (PNG transparent)
   room.png            décor de fond (la chambre)
-tools/                (dev) génération des assets à partir de SVG
+tools/                (dev) génération de placeholders SVG + smoke-test
 ```
 
 ## 🖼️ Remplacer les images
 
-Le jeu charge simplement `assets/creature.png` (perso, PNG **transparent**) et
-`assets/room.png` (fond). Pour utiliser tes propres images, **remplace ces deux
-fichiers** en gardant les mêmes noms — aucun code à modifier. Le perso est rendu
-sur un plane avec `LinearFilter` (rendu net, non pixel-art) ; le fond est cadré
-en *cover* automatiquement et s'adapte à la fenêtre.
+Le jeu charge `assets/tamagogo.png` (perso, PNG **transparent**) et
+`assets/room.png` (fond). Pour utiliser tes propres images, **remplace ces
+fichiers** — aucun code à modifier :
+
+- Le perso est rendu sur un plane avec `LinearFilter` (net, non pixel-art). Au
+  chargement, le jeu **mesure la boîte du corps visible** (via le canal alpha)
+  pour le dimensionner et le poser correctement sur le tapis, quelle que soit
+  la marge transparente autour du sprite.
+- Le fond est cadré en *cover* automatiquement et s'adapte à la fenêtre.
+
+Pour un autre nom de fichier perso, change le chemin dans `src/main.js`
+(`texLoader.load('./assets/…')`).
 
 Les assets fournis ont été générés à partir de SVG (`tools/svg/`). Pour les
 régénérer : `npm run assets` (nécessite Playwright / Chromium).
