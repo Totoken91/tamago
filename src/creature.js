@@ -43,11 +43,29 @@ function makeShadowTexture() {
   return t;
 }
 
+// Vertex shader « jelly » : le haut du sprite (le cou + l'antenne-bulbe)
+// ballotte tout seul → l'antenne gigote. Amplitude pilotée par uWobble.
 const VERT = /* glsl */`
+  uniform float uTime;
+  uniform float uWobble;   // amplitude (idle + impulsions d'interaction)
   varying vec2 vUv;
+
   void main() {
     vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec3 pos = position;
+
+    // poids qui monte vers le sommet : 0 en bas, ~1 au niveau de l'antenne
+    float top = smoothstep(0.5, 1.0, uv.y);
+    // ballant horizontal (deux fréquences → mouvement organique, pas mécanique)
+    float sway = sin(uTime * 5.0 + uv.y * 6.0) * 0.62
+               + sin(uTime * 8.3 + 1.7) * 0.38;
+    pos.x += top * top * uWobble * sway;
+    // léger sursaut vertical du bulbe
+    pos.y += top * uWobble * 0.18 * sin(uTime * 4.2);
+    // très léger balancement global (jelly) sur toute la hauteur
+    pos.x += (uv.y - 0.5) * uWobble * 0.25 * sin(uTime * 1.3);
+
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
   }
 `;
 
@@ -80,7 +98,8 @@ export class Creature {
   constructor(scene, texture, contentBox) {
     const w = 1;
     const h = texture.image.height / texture.image.width; // conserve le ratio
-    const geo = new THREE.PlaneGeometry(w, h);
+    // subdivisé pour que la déformation « jelly » de l'antenne soit fluide
+    const geo = new THREE.PlaneGeometry(w, h, 18, 26);
 
     // boîte du contenu (par défaut : tout le cadre)
     this.content = contentBox || { L: 0, R: 1, T: 0, B: 1, cx: 0.5, cy: 0.5, w: 1, h: 1 };
@@ -92,6 +111,8 @@ export class Creature {
         uSaturation: { value: 1 },
         uBrightness: { value: 1 },
         uAlpha: { value: 1 },
+        uTime: { value: 0 },
+        uWobble: { value: 0 },
       },
       vertexShader: VERT,
       fragmentShader: FRAG,
@@ -133,6 +154,9 @@ export class Creature {
     this.squash = 0;
     this.squashVel = 0;
 
+    // énergie de ballant de l'antenne (décroît ; relancée par les interactions)
+    this.wobbleEnergy = 0;
+
     // clignement
     this.nextBlink = 1.5 + Math.random() * 3;
     this.blink = 0; // 0 = ouvert, 1 = fermé
@@ -150,9 +174,10 @@ export class Creature {
     this._bri = 1;
   }
 
-  /** Impulsion de squash (rebond jelly). amount>0. */
+  /** Impulsion de squash (rebond jelly) + secousse de l'antenne. amount>0. */
   pop(amount) {
     this.squashVel += amount;
+    this.wobbleEnergy += amount * 0.7;
   }
 
   /** Active le mode jeu : la créature suit le curseur pendant `duration` s. */
@@ -262,8 +287,14 @@ export class Creature {
     );
     this.glowSprite.material.opacity = this.glow * (0.9 + Math.sin(this.time * 1.8) * 0.1);
 
-    // --- lissage des uniforms du shader (transitions de palier fluides) ------
+    // --- antenne « jelly » : ballant permanent + secousses d'interaction -----
+    this.wobbleEnergy *= Math.max(0, 1 - dt * 3.5);      // décroissance douce
+    const idleWobble = 0.03 * this.idleSpeed;            // gigote moins si triste
     const u = this.mat.uniforms;
+    u.uTime.value = this.time;
+    u.uWobble.value = idleWobble + this.wobbleEnergy;
+
+    // --- lissage des uniforms du shader (transitions de palier fluides) ------
     u.uTint.value.lerp(this._tint, Math.min(1, dt * 3));
     u.uSaturation.value += (this._sat - u.uSaturation.value) * Math.min(1, dt * 3);
     u.uBrightness.value += (this._bri - u.uBrightness.value) * Math.min(1, dt * 3);

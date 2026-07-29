@@ -15,7 +15,6 @@ import { FloatingText } from './floatingText.js';
 // ---------------------------------------------------------------------------
 const canvas   = document.getElementById('scene');
 const loaderEl = document.getElementById('loader');
-const loaderBar = document.getElementById('loader-bar');
 const wordsLayer = document.getElementById('words');
 const gaugeFill = document.getElementById('gauge-fill');
 const gaugePct = document.getElementById('gauge-pct');
@@ -58,9 +57,6 @@ const BG_Z = -3; // plan de fond (chambre)
 //  Chargement des textures (écran de chargement)
 // ---------------------------------------------------------------------------
 const manager = new THREE.LoadingManager();
-manager.onProgress = (_url, loaded, total) => {
-  loaderBar.style.width = Math.round((loaded / total) * 100) + '%';
-};
 const texLoader = new THREE.TextureLoader(manager);
 
 let bgMesh, creature, hearts, floating;
@@ -104,14 +100,16 @@ function computeContentBox(image, threshold = 40) {
   return { L, R, T, B, cx: (L + R) / 2, cy: (T + B) / 2, w: R - L, h: B - T };
 }
 
+const bootStart = performance.now();
 manager.onLoad = () => {
   buildScene();
   wireUI();
   resize();
   welcomeBack();
-  // fondu de l'écran de chargement
-  loaderEl.classList.add('hidden');
   requestAnimationFrame(loop);
+  // garde le splash visible un court instant (évite un flash sur chargement rapide)
+  const wait = Math.max(0, 850 - (performance.now() - bootStart));
+  setTimeout(() => loaderEl.classList.add('hidden'), wait);
 };
 
 // ---------------------------------------------------------------------------

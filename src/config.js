@@ -40,10 +40,10 @@ export const MOODS = [
 // `glow` = intensité du halo doux derrière la créature (0..1), rendu par un
 // simple sprite additif — pas de post-process coûteux.
 export const MOOD_STYLE = {
-  radiant:     { tint: [1.02, 1.03, 1.0], saturation: 1.05, brightness: 1.03, idle: 1.15, glow: 0.55, ambientHearts: 1.0,  label: 'Rayonnant·e ✨' },
-  content:     { tint: [1.0, 1.0, 1.0],   saturation: 1.0,  brightness: 1.0,  idle: 1.0,  glow: 0.16, ambientHearts: 0.15, label: 'Content·e 🙂' },
-  melancholic: { tint: [0.88, 0.92, 0.9], saturation: 0.6,  brightness: 0.9,  idle: 0.62, glow: 0.04, ambientHearts: 0.0,  label: 'Mélancolique 🌧️' },
-  needy:       { tint: [0.82, 0.86, 0.86], saturation: 0.42, brightness: 0.82, idle: 0.5,  glow: 0.0,  ambientHearts: 0.0,  label: "En manque d'affection 💔" },
+  radiant:     { tint: [1.02, 1.03, 1.0], saturation: 1.05, brightness: 1.03, idle: 1.15, glow: 0.55, ambientHearts: 1.0,  label: 'Rayonnant ✨' },
+  content:     { tint: [1.0, 1.0, 1.0],   saturation: 1.0,  brightness: 1.0,  idle: 1.0,  glow: 0.16, ambientHearts: 0.15, label: 'Tout va bien 🙂' },
+  melancholic: { tint: [0.88, 0.92, 0.9], saturation: 0.6,  brightness: 0.9,  idle: 0.62, glow: 0.04, ambientHearts: 0.0,  label: 'Un peu triste 🌧️' },
+  needy:       { tint: [0.82, 0.86, 0.86], saturation: 0.42, brightness: 0.82, idle: 0.5,  glow: 0.0,  ambientHearts: 0.0,  label: "En manque d'amour 💔" },
 };
 
 // Couleurs & quantités de cœurs par action (r,g,b en 0..1).
@@ -59,16 +59,16 @@ export const HEARTS = {
 // Petits mots doux affichés par l'action « Complimenter ».
 export const SWEET_WORDS = [
   'Tu es adorable', 'Je t\'aime', 'Tu comptes pour moi', 'Reste avec moi',
-  'Tu brilles', 'Mon petit trésor', 'Tu es parfait·e', 'Câlin ?',
-  'Tu me rends heureux·se', 'Coucou toi', 'Tu es unique', 'Merci d\'être là',
+  'Tu brilles', 'Mon petit trésor', 'Tu es parfait', 'Câlin ?',
+  'Tu me rends heureux', 'Coucou toi', 'Tu es unique', 'Merci d\'être là',
 ];
 
 // Textes d'humeur (choisis aléatoirement dans l'état courant).
 export const MOOD_TEXTS = {
-  radiant:     ['déborde de bonheur !', 'se sent aimé·e 💚', 'rayonne de joie', 'flotte sur un nuage'],
-  content:     ['passe une bonne journée', 'se sent bien', 'apprécie ta présence', 'ronronne doucement'],
-  melancholic: ['a besoin d\'un peu d\'attention…', 'se sent un peu seul·e', 'aimerait un câlin', 'te regarde tristement'],
-  needy:       ['a vraiment besoin de toi 💔', 'se sent oublié·e…', 'tremble un peu…', 'attend ton amour'],
+  radiant:     ['déborde de bonheur !', 'se sent tout plein d\'amour 💚', 'rayonne de joie', 'flotte sur un petit nuage'],
+  content:     ['passe une bonne journée', 'se sent bien', 'aime ta présence', 'ronronne doucement'],
+  melancholic: ['réclame un peu d\'attention…', 'se sent un peu seul', 'aimerait un câlin', 'te fait de grands yeux'],
+  needy:       ['a vraiment besoin de toi 💔', 'se sent oublié…', 'tremblote un peu…', 'attend ton amour'],
 };
 
 export const STORAGE_KEY = 'tamalove.save.v1';
