@@ -467,7 +467,7 @@ function applyBond(silent) {
     const leveledUp = newLevel > state.bondLevel;
     state.bondLevel = newLevel;
     const evo = evoForLevel(newLevel);
-    creature.setEvolution(evo.scale, evo.glowBonus);
+    creature.setEvolution(evo.scale, evo.glowBonus, evo.tint);
     resize();  // reposition (la taille a changé)
     if (leveledUp && !silent) {
       showToast(`Niveau de lien ${newLevel} ! ${evo !== prevEvo ? evo.label : '🔗'}`);
@@ -479,7 +479,7 @@ function applyBond(silent) {
   } else {
     // s'assure que l'évolution est appliquée au boot
     const evo = evoForLevel(newLevel);
-    creature.setEvolution(evo.scale, evo.glowBonus);
+    creature.setEvolution(evo.scale, evo.glowBonus, evo.tint);
   }
   updateBondUI();
 }

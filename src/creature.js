@@ -175,12 +175,14 @@ export class Creature {
     this._tint = new THREE.Vector3(1, 1, 1);
     this._sat = 1;
     this._bri = 1;
+    this._tintMix = new THREE.Vector3(1, 1, 1); // scratch : humeur × évolution
 
     // vie : regard vers le curseur, sommeil, évolution
     this.lookX = 0; this.lookY = 0;   // curseur normalisé -1..1
     this.asleep = false;
     this.evoScale = 1;                 // multiplicateur d'évolution
     this._glowBonus = 0;              // halo permanent lié à l'évolution
+    this._evoTint = new THREE.Vector3(1, 1, 1); // teinte permanente liée à l'évolution
   }
 
   /** Impulsion de squash (rebond jelly) + secousse de l'antenne. amount>0. */
@@ -221,8 +223,12 @@ export class Creature {
   /** Sommeil (cycle jour/nuit). */
   setSleep(v) { this.asleep = v; }
 
-  /** Applique un stade d'évolution (taille + halo permanent). */
-  setEvolution(scale, glowBonus) { this.evoScale = scale; this._glowBonus = glowBonus; }
+  /** Applique un stade d'évolution (taille + halo + teinte permanents). */
+  setEvolution(scale, glowBonus, tint) {
+    this.evoScale = scale;
+    this._glowBonus = glowBonus;
+    if (tint) this._evoTint.set(tint[0], tint[1], tint[2]);
+  }
 
   // --- ancrages (monde) dérivés de la boîte du contenu ----------------------
   get _ww() { return (this._worldWidth || 1) * (this.evoScale || 1); }
@@ -316,8 +322,13 @@ export class Creature {
     u.uTime.value = this.time;
     u.uWobble.value = idleWobble + this.wobbleEnergy;
 
-    // --- lissage des uniforms : humeur, teintée « nuit » pendant le sommeil ---
-    const tint = this.asleep ? SLEEP_TINT : this._tint;
+    // --- lissage des uniforms : humeur × évolution, teintée « nuit » pendant le sommeil ---
+    const moodTint = this.asleep ? SLEEP_TINT : this._tint;
+    const tint = this._tintMix.set(
+      moodTint.x * this._evoTint.x,
+      moodTint.y * this._evoTint.y,
+      moodTint.z * this._evoTint.z
+    );
     const sat = this.asleep ? 0.7 : this._sat;
     const bri = this.asleep ? 0.72 : this._bri;
     u.uTint.value.lerp(tint, Math.min(1, dt * 2));

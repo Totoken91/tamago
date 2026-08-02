@@ -79,15 +79,27 @@ export const BOND = {
   XP: { caress: 1, hug: 6, compliment: 4, play: 5, ask: 10, golden: 8, minigame: 12 },
   XP_PER_MIN_PRESENT: 2,          // petit gain passif tant qu'on est là
   // Paliers de niveau : XP cumulé requis pour atteindre le niveau (index+1).
-  LEVELS: [0, 40, 110, 220, 380, 600, 900, 1300, 1800, 2500],
+  LEVELS: [
+    0, 40, 110, 220, 380, 600, 900, 1300, 1800, 2500,             // 1–10
+    3400, 4500, 5800, 7300, 9000, 11000, 13300, 16000, 19200, 23000, // 11–20
+    27400, 32400, 38100, 44600, 52000,                             // 21–25
+  ],
 };
 
 // Stades d'évolution selon le niveau de lien. scale = taille relative,
-// glowBonus = halo permanent ajouté, label affiché à l'évolution.
+// tint = multiplicateur couleur RVB appliqué sur le sprite (pas de nouvel
+// asset : on teinte celui qu'on a), glowBonus = halo permanent, label
+// affiché au moment de l'évolution.
 export const EVOLUTION = [
-  { minLevel: 1, scale: 0.86, glowBonus: 0.0,  label: 'Bébé 🌱' },
-  { minLevel: 3, scale: 1.0,  glowBonus: 0.04, label: 'Jeune ✨' },
-  { minLevel: 6, scale: 1.12, glowBonus: 0.12, label: 'Épanoui 🌟' },
+  { minLevel: 1,  scale: 0.86, tint: [1.0, 1.0, 1.0],   glowBonus: 0.0,  label: 'Bébé 🌱' },
+  { minLevel: 3,  scale: 1.0,  tint: [1.0, 1.0, 1.0],   glowBonus: 0.04, label: 'Jeune ✨' },
+  { minLevel: 6,  scale: 1.12, tint: [1.0, 1.0, 1.0],   glowBonus: 0.12, label: 'Épanoui 🌟' },
+  { minLevel: 9,  scale: 1.22, tint: [0.8, 1.05, 1.3],  glowBonus: 0.16, label: 'Radieux 💠' },   // bleu-cyan
+  { minLevel: 12, scale: 1.30, tint: [0.65, 0.9, 1.45], glowBonus: 0.20, label: 'Céleste 🔵' },   // bleu profond
+  { minLevel: 15, scale: 1.38, tint: [1.05, 0.75, 1.4], glowBonus: 0.24, label: 'Onirique 💜' },  // violet
+  { minLevel: 18, scale: 1.45, tint: [1.5, 0.8, 0.6],   glowBonus: 0.28, label: 'Incandescent 🔥' }, // rouge-orangé
+  { minLevel: 22, scale: 1.52, tint: [1.5, 1.3, 0.55],  glowBonus: 0.34, label: 'Doré 👑' },       // or
+  { minLevel: 25, scale: 1.58, tint: [1.35, 1.15, 1.6], glowBonus: 0.4,  label: 'Légendaire 🌌' }, // irisé
 ];
 
 // ============================================================================
